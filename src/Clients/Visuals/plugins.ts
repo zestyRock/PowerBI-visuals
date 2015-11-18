@@ -344,4 +344,13 @@ module powerbi.visuals.plugins {
         capabilities: samples.AreaRangeChart.capabilities,
         create: () => new samples.AreaRangeChart()
     };
+
+    export var mekkoChart: IVisualPlugin = {
+        name: 'mekkoChart',
+        watermarkKey: 'mekko',
+        capabilities: samples.MekkoChart.capabilities,
+        create: () => new samples.MekkoChart({ chartType: CartesianChartType.HundredPercentStackedColumn }),
+        customizeQuery: ColumnChart.customizeQuery,
+        getSortableRoles: (visualSortableOptions?: VisualSortableOptions) => ColumnChart.getSortableRoles(visualSortableOptions),
+    };
 }

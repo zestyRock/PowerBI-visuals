@@ -293,6 +293,14 @@ module powerbi.visuals {
             createPlugin(plugins, powerbi.visuals.plugins.areaRangeChart, () => new samples.AreaRangeChart({
                 animator: new BaseAnimator()
             }));
+            // Mekko Chart
+            createPlugin(plugins, powerbi.visuals.plugins.mekkoChart, () => new samples.MekkoChart({
+                chartType: CartesianChartType.HundredPercentStackedColumn,
+                isScrollable: true,
+                animator: new WebColumnChartAnimator(),
+                behavior: new CartesianChartBehavior([new ColumnChartWebBehavior()]),
+                seriesLabelFormattingEnabled: seriesLabelFormattingEnabled,
+            }));
         }
 
         export class MinervaVisualPluginService extends VisualPluginService {
