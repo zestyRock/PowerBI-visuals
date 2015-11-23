@@ -295,7 +295,7 @@ module powerbi.visuals {
             }));
             // Mekko Chart
             createPlugin(plugins, powerbi.visuals.plugins.mekkoChart, () => new samples.MekkoChart({
-                chartType: CartesianChartType.HundredPercentStackedColumn,
+                chartType: samples.MekkoChartType.HundredPercentStackedColumn,
                 isScrollable: true,
                 animator: new WebColumnChartAnimator(),
                 behavior: new CartesianChartBehavior([new ColumnChartWebBehavior()]),
