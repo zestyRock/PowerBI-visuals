@@ -349,7 +349,7 @@ module powerbi.visuals.plugins {
         name: 'mekkoChart',
         watermarkKey: 'mekko',
         capabilities: samples.MekkoChart.capabilities,
-        create: () => new samples.MekkoChart({ chartType: CartesianChartType.HundredPercentStackedColumn }),
+        create: () => new samples.MekkoChart({ chartType: samples.MekkoChartType.HundredPercentStackedColumn }),
         customizeQuery: ColumnChart.customizeQuery,
         getSortableRoles: (visualSortableOptions?: VisualSortableOptions) => ColumnChart.getSortableRoles(visualSortableOptions),
     };

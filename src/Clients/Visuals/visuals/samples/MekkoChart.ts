@@ -36,8 +36,18 @@ module powerbi.visuals.samples {
         ShowLinesOnYAxis = 2,
         ShowLinesOnBothAxis = ShowLinesOnXAxis | ShowLinesOnYAxis,
     }
-    const enum MekkoChartType {
+    
+    export const enum MekkoChartType {
         HundredPercentStackedColumn,
+    }
+
+    export interface MekkoConstructorOptions {
+        chartType: MekkoChartType;
+        isScrollable?: boolean;
+        animator?: IGenericAnimator;
+        cartesianSmallViewPortProperties?: CartesianSmallViewPortProperties;
+        behavior?: IInteractiveBehavior;
+        seriesLabelFormattingEnabled?: boolean;
     }
 
     export class MekkoChartStrategy implements IColumnChartStrategy {
@@ -78,30 +88,8 @@ module powerbi.visuals.samples {
         public setData(data: ColumnChartData) {
             this.data = data;
         }
-/*
-        public setXScale(is100Pct: boolean, forcedTickCount?: number, forcedXDomain?: any[], axisScaleType?: string): IAxisProperties {
-            var width = this.width;
 
-            var forcedXMin, forcedXMax;
-
-            if (forcedXDomain && forcedXDomain.length === 2) {
-                forcedXMin = forcedXDomain[0];
-                forcedXMax = forcedXDomain[1];
-            }
-
-            var props = this.xProps = ColumnUtil.getCategoryAxis(
-                this.data,
-                width,
-                this.categoryLayout,
-                false,
-                forcedXMin,
-                forcedXMax,
-                axisScaleType);
-
-            return props;
-        }
-*/
-
+ /*
        private getValueAxis(
             data: ColumnChartData,
             is100Pct: boolean,
@@ -110,57 +98,65 @@ module powerbi.visuals.samples {
             forcedTickCount?: number,
             forcedYDomain?: any[],
             axisScaleType?: string): IAxisProperties {
-            /*var valueDomain = calcValueDomain(data.series, is100Pct),
-                min = valueDomain.min,
-                max = valueDomain.max;
-                */
-                
+
+            console.clear();
+            
+       
+            
+            var valueDomain = data.series[0].data.map((item: ColumnChartDataPoint) => {
+                return item.originalPosition;
+            });
+            
             var min = 0;
             var max = 1;
-
+            
+            console.log('valueDomain', valueDomain);
+            console.log('scaleRange', scaleRange);
+            
             var maxTickCount = AxisHelper.getRecommendedNumberOfTicksForYAxis(size);
+            maxTickCount = valueDomain.length;
             var bestTickCount = ColumnUtil.getTickCount(min, max, data.valuesMetadata, maxTickCount, is100Pct, forcedTickCount);
+            bestTickCount = valueDomain.length;
             var normalizedRange = AxisHelper.normalizeLinearDomain({ min: min, max: max });
             var valueDomainNorm = [normalizedRange.min, normalizedRange.max];
-            var axisType = ValueType.fromDescriptor({ numeric: true });
+            var axisType = ValueType.fromDescriptor({ text: true });
+
+            console.log('valueDomainNorm', valueDomainNorm);
 
             var combinedDomain = AxisHelper.combineDomain(forcedYDomain, valueDomainNorm);  
             var isLogScaleAllowed = AxisHelper.isLogScalePossible(combinedDomain, axisType);                                  
             var useLogScale = axisScaleType && axisScaleType === axisScale.log && isLogScaleAllowed;
 
-            useLogScale = false;
             var scale = useLogScale ? d3.scale.log() : d3.scale.linear();
-
-            var xValues = data.series[0].data.map((item: ColumnChartDataPoint) => {
-                return item.originalPosition;
-            });
-               /* 
-            console.log('xValues', xValues);
             
-            console.log('scaleRange', scaleRange);
             console.log('combinedDomain', combinedDomain);
-            console.log('bestTickCount', bestTickCount || undefined);
-            */
+            console.log('isLogScaleAllowed', isLogScaleAllowed);
+            console.log('useLogScale', useLogScale);
+
             scale.range(scaleRange)
                 .domain(combinedDomain)
                 .nice(bestTickCount || undefined)
                 .clamp(AxisHelper.scaleShouldClamp(combinedDomain, valueDomainNorm));     
 
             ColumnUtil.normalizeInfinityInScale(scale);
-
-            var dataType: ValueType = AxisHelper.getCategoryValueType(data.valuesMetadata[0], true);
-            var formatString = valueFormatter.getFormatString(data.valuesMetadata[0], columnChartProps.general.formatString);
+            
+            var xMetadata = data.categoryMetadata;
+            var dataType: ValueType = AxisHelper.getCategoryValueType(xMetadata, true);
+            var formatString = valueFormatter.getFormatString(xMetadata, columnChartProps.general.formatString);
             var minTickInterval = AxisHelper.getMinTickValueInterval(formatString, dataType);
             var yTickValues: any[] = AxisHelper.getRecommendedTickValuesForAQuantitativeRange(bestTickCount, scale, minTickInterval);
-
+            
+            console.log('xMetadata', xMetadata);
+            console.log('dataType', dataType);
+            console.log('formatString', formatString);
+            console.log('minTickInterval', minTickInterval);
+            console.log('yTickValues', yTickValues);
+            
             if (useLogScale) {
                 yTickValues = yTickValues.filter((d) => { return AxisHelper.powerOfTen(d); });
             }
-            
-            yTickValues = xValues;
+            console.log('yTickValues', yTickValues);
 
-            //yTickValues = [0, 0.7, 0.8, 0.5, 0.6666666666666666, 0.8333333333333334];
-            
             var d3Axis = d3.svg.axis()
                 .scale(scale)
                 .tickValues(yTickValues);
@@ -171,83 +167,199 @@ module powerbi.visuals.samples {
                 is100Pct,
                 yInterval);
             d3Axis.tickFormat(yFormatter.format);
-
-            var values = yTickValues.map((d: ColumnChartDataPoint) => yFormatter.format(d));                 
             
-            //console.log(data);
-              
-            var isScalar = false;
-            var forcedXMin = 0;
-            var forcedXMax = 1;
-            var domain = AxisHelper.createDomain(data.series, data.categoryMetadata ? data.categoryMetadata.type : ValueType.fromDescriptor({ text: true }), isScalar, [forcedXMin, forcedXMax]);
-            var dw = new DataWrapper(data, false);
+            console.log('yInterval', yInterval);
             
-            //domain = [0.9, 0.1, 0, 0, 0, 0, 0, 0, 0 ];
+            console.log('data.valuesMetadata', data.valuesMetadata);
+            console.log('yFormatter', yFormatter);
 
-            //yTickValues = [1,2,3,4 ];
-            //yTickValues = [0, 0.16666666666666666, 0.3333333333333333, 0.5, 0.6666666666666666, 0.8333333333333334];
-
-          //  console.log('values', values);
-          
-            var domain = AxisHelper.createDomain(data.series, data.categoryMetadata ? data.categoryMetadata.type : ValueType.fromDescriptor({ text: true }), isScalar, [forcedXMin, forcedXMax]);
-            domain = yTickValues;//[0.1, 0.2, 0.4, 0.6, 0.8, 0.9];
-           // console.log('domain', domain);
-            var axisProperties = AxisHelper.createAxis({
-                pixelSpan: size,
-                dataDomain: domain,
-                metaDataColumn: data.categoryMetadata,
-                formatStringProp: columnChartProps.general.formatString,
-                outerPadding: 10,
-                isCategoryAxis: true,
-                isScalar: isScalar,
-                isVertical: false,
-                categoryThickness: 10,
-                useTickIntervalForDisplayUnits: true,
-                getValueFn: (index, type) => {
-                    //console.log(arguments, dw);
-                    return dw.lookupXValue(index, type);
-                },
-                scaleType: axisScaleType
-            });
-            
-            //console.log('yTickValues: ', yTickValues);
-            var d3Axis = d3.svg.axis()
-                .scale(scale)
-                .tickValues(yTickValues);
-
-            var yInterval = ColumnChart.getTickInterval(yTickValues);
-            var yFormatter = StackedUtil.createValueFormatter(
-                data.valuesMetadata,
-                is100Pct,
-                yInterval);
-            d3Axis.tickFormat(yFormatter.format);
-            /*
-            d3Axis.tickFormat((item, index) => 
-                {   console.log(item, index);
-                    return index;
-                });
-            */
             var values = yTickValues.map((d: ColumnChartDataPoint) => yFormatter.format(d));            
 
-            //console.log(axisProperties);
-            //return axisProperties;
-            //axisProperties = $.extend(true, axisProperties, )
-            
-            var params = {
-              //  axis: d3Axis,
+            return {
+                axis: d3Axis,
                 scale: scale,
-             //     formatter: yFormatter,
-             //   values: values,
+                formatter: yFormatter,
+                values: values,
                 axisType: axisType,
                 axisLabel: null,
                 isCategoryAxis: false,
                 isLogScaleAllowed: isLogScaleAllowed
             };
-            
-            params = $.extend(true, axisProperties, params);
-             //return params;
-             return axisProperties;
         }
+        */     
+                
+        private static createFormatter(
+            scaleDomain: any[],
+            dataDomain: any[],
+            dataType,
+            isScalar: boolean,
+            formatString: string,
+            bestTickCount: number,
+            tickValues: any[],
+            getValueFn: any,
+            useTickIntervalForDisplayUnits: boolean = false): IValueFormatter {
+
+            var formatter: IValueFormatter;
+            if (dataType.dateTime) {
+                if (isScalar) {
+                    var value = new Date(scaleDomain[0]);
+                    var value2 = new Date(scaleDomain[1]);
+                    // datetime with only one value needs to pass the same value
+                    // (from the original dataDomain value, not the adjusted scaleDomain)
+                    // so formatting works correctly.
+                    if (bestTickCount === 1)
+                        value = value2 = new Date(dataDomain[0]);
+                    formatter = valueFormatter.create({ format: formatString, value: value, value2: value2, tickCount: bestTickCount });
+                }
+                else {
+                    if (getValueFn == null) {
+                        debug.assertFail('getValueFn must be supplied for ordinal datetime tickValues');
+                    }
+                    var minDate: Date = getValueFn(0, dataType);
+                    var maxDate: Date = getValueFn(scaleDomain.length - 1, dataType);
+                    formatter = valueFormatter.create({ format: formatString, value: minDate, value2: maxDate, tickCount: bestTickCount });
+                }
+            }
+            else {
+                if (getValueFn == null && !isScalar) {
+                    debug.assertFail('getValueFn must be supplied for ordinal tickValues');
+                }
+                if (useTickIntervalForDisplayUnits && isScalar && tickValues.length > 1) {
+                    var domainMin = tickValues[1] - tickValues[0];
+                    var domainMax = 0; //force tickInterval to be used with display units
+                    formatter = valueFormatter.create({ format: formatString, value: domainMin, value2: domainMax, allowFormatBeautification: true });
+                }
+                else {
+                    // do not use display units, just the basic value formatter
+                    // datetime is handled above, so we are ordinal and either boolean, numeric, or text.
+                    formatter = valueFormatter.createDefaultFormatter(formatString, true);
+                }
+            }
+
+            return formatter;
+        }
+        
+        /**
+         * Create a D3 axis including scale. Can be vertical or horizontal, and either datetime, numeric, or text.
+         * @param options The properties used to create the axis.
+         */
+        private createAxis(options): IAxisProperties {
+            var pixelSpan = options.pixelSpan,
+                dataDomain = options.dataDomain,
+                metaDataColumn = options.metaDataColumn,
+                formatStringProp = options.formatStringProp,
+                outerPadding = options.outerPadding || 0,
+                isCategoryAxis = !!options.isCategoryAxis,
+                isScalar = !!options.isScalar,
+                isVertical = !!options.isVertical,
+                useTickIntervalForDisplayUnits = !!options.useTickIntervalForDisplayUnits, // DEPRECATE: same meaning as isScalar?
+                getValueFn = options.getValueFn,
+                categoryThickness = options.categoryThickness;
+
+            var formatString = valueFormatter.getFormatString(metaDataColumn, formatStringProp);
+            var dataType: ValueType = AxisHelper.getCategoryValueType(metaDataColumn, isScalar);
+            
+           /* console.clear();
+            console.log('dataDomain', dataDomain);
+            console.log('formatString', formatString);
+            console.log('dataType', dataType);     */   
+            // Create the Scale
+          /*  var scaleResult: CreateScaleResult = AxisHelper.createScale(options);
+            var scale = scaleResult.scale;
+            var bestTickCount = scaleResult.bestTickCount;
+            var scaleDomain = scale.domain();
+            
+            console.log('scaleResult', scaleResult);
+            console.log('scale', scale);   
+            console.log('bestTickCount', bestTickCount);   
+            console.log('scaleDomain', scaleDomain);   
+           */
+            
+            var isLogScaleAllowed = AxisHelper.isLogScalePossible(dataDomain, dataType);
+          
+            //var bestTickCount 
+           var scale = d3.scale.linear();
+            
+            var scaleDomain = [0, 10];
+            var bestTickCount = dataDomain.length;
+            
+            
+            scale.domain([0, 1])
+                .range([0, pixelSpan])
+                //.nice(bestTickCount || undefined)
+                //.clamp(AxisHelper.scaleShouldClamp([0, 10], [0, 10]));     
+
+  /*
+    
+            console.log('range', [0, pixelSpan]);
+            console.log('bestTickCount', bestTickCount);
+            console.log('scale.range', scale.range());
+            
+            
+            console.log('scale.dataDomain1', dataDomain[1], scale(dataDomain[1]));
+            console.log('scale.dataDomain2', dataDomain[2], scale(dataDomain[2]));
+            */
+
+            var tickValues = dataDomain;
+           // console.log('minTickInterval', minTickInterval);   
+           // console.log('tickValues', tickValues);   
+
+            var formatter = MekkoChartStrategy.createFormatter(
+                scaleDomain,
+                dataDomain,
+                dataType,
+                isScalar,
+                formatString,
+                bestTickCount,
+                tickValues,
+                getValueFn,
+                useTickIntervalForDisplayUnits);
+
+            // sets default orientation only, cartesianChart will fix y2 for comboChart
+            // tickSize(pixelSpan) is used to create gridLines
+            var axis = d3.svg.axis()
+                .scale(scale)
+                .tickSize(6, 0)
+                .orient(isVertical ? 'left' : 'bottom')
+                .ticks(bestTickCount)
+                .tickValues(dataDomain);
+
+            var formattedTickValues = [];
+            if (metaDataColumn) {
+                formattedTickValues = AxisHelper.formatAxisTickValues(axis, tickValues, formatter, dataType, isScalar, getValueFn);
+            }
+            
+            //console.log('formattedTickValues', formattedTickValues);
+            var xLabelMaxWidth;
+            // Use category layout of labels if specified, otherwise use scalar layout of labels
+            if (!isScalar && categoryThickness) {
+                xLabelMaxWidth = Math.max(1, categoryThickness - CartesianChart.TickLabelPadding * 2);
+            }
+            else {
+                // When there are 0 or 1 ticks, then xLabelMaxWidth = pixelSpan       
+                // When there is > 1 ticks then we need to +1 so that their widths don't overlap
+                // Example: 2 ticks are drawn at 33.33% and 66.66%, their width needs to be 33.33% so they don't overlap.
+                var labelAreaCount = tickValues.length > 1 ? tickValues.length + 1 : tickValues.length;
+                xLabelMaxWidth = labelAreaCount > 1 ? pixelSpan / labelAreaCount : pixelSpan;
+                xLabelMaxWidth = Math.max(1, xLabelMaxWidth - CartesianChart.TickLabelPadding * 2);
+            }
+                
+            return {
+                scale: scale,
+                axis: axis,
+                formatter: formatter,
+                values: formattedTickValues,
+                axisType: dataType,
+                axisLabel: null,
+                isCategoryAxis: isCategoryAxis,
+                xLabelMaxWidth: xLabelMaxWidth,
+                categoryThickness: categoryThickness,
+                outerPadding: outerPadding,
+                usingDefaultDomain: false,//scaleResult.usingDefaultDomain,
+                isLogScaleAllowed: isLogScaleAllowed
+            };
+        }
+        
         
         
         private getCategoryAxis(
@@ -263,9 +375,13 @@ module powerbi.visuals.samples {
             var isScalar = layout.isScalar;
             var outerPaddingRatio = layout.outerPaddingRatio;
             var dw = new DataWrapper(data, isScalar);
-            var domain = AxisHelper.createDomain(data.series, data.categoryMetadata ? data.categoryMetadata.type : ValueType.fromDescriptor({ text: true }), isScalar, [forcedXMin, forcedXMax]);
+            //var domain = AxisHelper.createDomain(data.series, data.categoryMetadata ? data.categoryMetadata.type : ValueType.fromDescriptor({ text: true }), isScalar, [forcedXMin, forcedXMax]);
 
-            var axisProperties = AxisHelper.createAxis({
+            var domain = data.series[0].data.map((item: ColumnChartDataPoint) => {
+                return item.originalPosition + item.value / 2;
+            });
+           
+            var axisProperties = this.createAxis({
                 pixelSpan: size,
                 dataDomain: domain,
                 metaDataColumn: data.categoryMetadata,
@@ -276,7 +392,12 @@ module powerbi.visuals.samples {
                 isVertical: isVertical,
                 categoryThickness: categoryThickness,
                 useTickIntervalForDisplayUnits: true,
-                getValueFn: (index, type) => dw.lookupXValue(index, type),
+                getValueFn: (index, type) => {
+                    
+                    var domainIndex = domain.indexOf(index);
+                    //console.log('getValueFn', index, domainIndex, dw.lookupXValue(domainIndex, type));
+                    return dw.lookupXValue(domainIndex, type);
+                },
                 scaleType: axisScaleType
             });
 
@@ -285,7 +406,6 @@ module powerbi.visuals.samples {
 
             return axisProperties;
         }
-        
         
         public setXScale(is100Pct: boolean, forcedTickCount?: number, forcedXDomain?: any[], axisScaleType?: string): IAxisProperties {
             var width = this.width;
@@ -297,6 +417,7 @@ module powerbi.visuals.samples {
                 forcedXMax = forcedXDomain[1];
             }
 
+
             var props = this.xProps = this.getCategoryAxis(
                 this.data,
                 width,
@@ -306,34 +427,9 @@ module powerbi.visuals.samples {
                 forcedXMax,
                 axisScaleType);
                 
-            
-             var xProps = this.getValueAxis(
-                this.data,
-                is100Pct,
-                width,
-                [0, width],
-                forcedTickCount,
-                forcedXDomain,
-                axisScaleType);
-            
-            props = $.extend(true, props, xProps);
-            
             return props;
         }
         
-        public setXScale3(is100Pct: boolean, forcedTickCount?: number, forcedXDomain?: any[], axisScaleType?: string): IAxisProperties {
-            var width = this.viewportWidth;
-            var xProps = this.xProps = this.getValueAxis(
-                this.data,
-                is100Pct,
-                width,
-                [0, width],
-                forcedTickCount,
-                forcedXDomain,
-                axisScaleType);
-
-            return xProps;
-        }
 
         public setYScale(is100Pct: boolean, forcedTickCount?: number, forcedYDomain?: any[], axisScaleType?: string): IAxisProperties {
             var height = this.viewportHeight;
@@ -570,15 +666,6 @@ module powerbi.visuals.samples {
 
     var COMBOCHART_DOMAIN_OVERLAP_TRESHOLD_PERCENTAGE = 0.1;
 
-    export interface MekkoConstructorOptions {
-        chartType: MekkoChartType;
-        isScrollable?: boolean;
-        animator?: IGenericAnimator;
-        cartesianSmallViewPortProperties?: CartesianSmallViewPortProperties;
-        behavior?: IInteractiveBehavior;
-        seriesLabelFormattingEnabled?: boolean;
-    }
-
     /** 
      * Renders a data series as a cartestian visual.
      */
@@ -639,7 +726,7 @@ module powerbi.visuals.samples {
                 },
                 categoryAxis: {
                     //displayName: transposeAxes ? data.createDisplayNameGetter('Visual_YAxis') : data.createDisplayNameGetter('Visual_XAxis'),
-                    displayName: data.createDisplayNameGetter('Visual_YAxis'),
+                    displayName: data.createDisplayNameGetter('Visual_XAxis'),
                     properties: {
                         show: {
                             displayName: data.createDisplayNameGetter('Visual_Show'),
@@ -653,14 +740,14 @@ module powerbi.visuals.samples {
                             displayName: data.createDisplayNameGetter('Visual_Axis_Scale'),
                             type: { formatting: { axisScale: true } }
                         },
-                        start: {
+                        /*start: {
                             displayName: data.createDisplayNameGetter('Visual_Axis_Start'),
                             type: { numeric: true }
                         },
                         end: {
                             displayName: data.createDisplayNameGetter('Visual_Axis_End'),
                             type: { numeric: true }
-                        },
+                        },*/
                         axisType: {
                             displayName: data.createDisplayNameGetter('Visual_Axis_Type'),
                             type: { formatting: { axisType: true } }
@@ -681,7 +768,7 @@ module powerbi.visuals.samples {
                 },
                 valueAxis: {
                     //displayName: transposeAxes ? data.createDisplayNameGetter('Visual_XAxis') : data.createDisplayNameGetter('Visual_YAxis'),
-                    displayName: data.createDisplayNameGetter('Visual_XAxis'),
+                    displayName: data.createDisplayNameGetter('Visual_YAxis'),
                     properties: {
                         show: {
                             displayName: data.createDisplayNameGetter('Visual_Show'),
@@ -695,14 +782,14 @@ module powerbi.visuals.samples {
                             displayName: data.createDisplayNameGetter('Visual_Axis_Scale'),
                             type: { formatting: { axisScale: true } }
                         },
-                        start: {
+                        /*start: {
                             displayName: data.createDisplayNameGetter('Visual_Axis_Start'),
                             type: { numeric: true }
                         },
                         end: {
                             displayName: data.createDisplayNameGetter('Visual_Axis_End'),
                             type: { numeric: true }
-                        },
+                        },*/
                         intersection: {
                             displayName: data.createDisplayNameGetter('Visual_Axis_Intersection'),
                             type: { numeric: true }
@@ -750,7 +837,7 @@ module powerbi.visuals.samples {
                         }
                     }
                 },
-                labels: {
+             /*   labels: {
                     displayName: data.createDisplayNameGetter('Visual_DataPointsLabels'),
                     properties: {
                         show: {
@@ -770,13 +857,12 @@ module powerbi.visuals.samples {
                             type: { numeric: true }
                         },
                     },
-                },
+                },*/
             },
             dataViewMappings: [{
                 conditions: [
-                    { 'Category': { max: 1 }, 'Series': { max: 0 }, 'Width': { max: 0 } },
-                    { 'Category': { max: 1 }, 'Series': { min: 1, max: 1 }, 'Y': { max: 1 }, 'Width': { max: 1 } },
-                    { 'Category': { max: 1 }, 'Series': { max: 0 }, 'Y': { min: 0, max: 1 }, 'Width': { max: 1 } },
+                    { 'Category': { min: 0, max: 1 }, 'Series': { min: 0, max: 1 }, 'Y': { min: 0, max: 1 }, 'Width': { max: 0 } },
+                    { 'Category': { min: 1, max: 1 }, 'Series': { min: 1, max: 1 }, 'Y': { min: 1, max: 1 }, 'Width': { max: 1 } },
                 ],
                 categorical: {
                     categories: {
@@ -786,11 +872,10 @@ module powerbi.visuals.samples {
                     values: {
                         group: {
                             by: 'Series',
-                            select: [{ for: { in: 'Y' } }, { bind: { to: 'Gradient' } }],
+                            select: [{ for: { in: 'Y' } }, { bind: { to: 'Width' } }],
                             dataReductionAlgorithm: { top: {} }
                         },
                         select: [
-                            { bind: { to: 'Y' } },
                             { bind: { to: 'Width' } },
                         ]
                     },
@@ -820,6 +905,7 @@ module powerbi.visuals.samples {
         private static LeftPadding = 10;
         private static RightPadding = 15;
         private static BottomPadding = 12;
+        //private static PlayAxisBottomMargin = 75;
         private static YAxisLabelPadding = 20;
         private static XAxisLabelPadding = 18;
         private static TickPaddingY = 10;
@@ -878,19 +964,22 @@ module powerbi.visuals.samples {
         private axisGraphicsContextScrollable: D3.Selection;
         private labelGraphicsContextScrollable: D3.Selection;
         private brushGraphicsContext: D3.Selection;
-        //private brushContext: D3.Selection;
+        private brushContext: D3.Selection;
         private brush: D3.Svg.Brush;
         private static ScrollBarWidth = 10;
+        private static fillOpacity = 0.125;
+        private brushMinExtent: number;
+        private scrollScale: D3.Scale.OrdinalScale;
 
         // TODO: Remove onDataChanged & onResizing once all visuals have implemented update.
         private dataViews: DataView[];
         private currentViewport: IViewport;
-
-        /*
+/*
         private static getAxisVisibility(type: MekkoChartType): AxisLinesVisibility {
             return AxisLinesVisibility.ShowLinesOnBothAxis;
-        }*/
-
+        }
+*/
+        
         constructor(options: MekkoConstructorOptions) {
             this.isScrollable = false;
             if (options) {
@@ -938,6 +1027,21 @@ module powerbi.visuals.samples {
             var showLinesOnY = this.scrollX = EnumExtensions.hasFlag(axisLinesVisibility, AxisLinesVisibility.ShowLinesOnBothAxis) ||
                 EnumExtensions.hasFlag(axisLinesVisibility, AxisLinesVisibility.ShowLinesOnYAxis);
 
+            /*
+                The layout of the visual would look like :
+                <svg>
+                    <g>
+                        <nonscrollable axis/>
+                    </g>
+                    <svgScrollable>
+                        <g>
+                            <scrollable axis/>
+                        </g>
+                    </svgScrollable>
+                    <g xbrush/>
+                </svg>                    
+
+            */
             var svg = this.svg = d3.select(element.get(0)).append('svg');
             svg.style('position', 'absolute');
 
@@ -994,6 +1098,7 @@ module powerbi.visuals.samples {
             var height = options.viewport.height;
             var fontSize = MekkoChart.FontSize;
             var heightOffset = fontSize;
+            
             var showOnRight = this.yAxisOrientation === yAxisPosition.right;
 
             if (!options.hideXAxisTitle) {
@@ -1178,7 +1283,9 @@ module powerbi.visuals.samples {
 
             var dataViews = this.dataViews = options.dataViews;
             this.currentViewport = options.viewport;
-
+            
+            //console.log(dataViews);
+            
             if (!dataViews) return;
 
             if (this.layers.length === 0) {
@@ -1222,6 +1329,7 @@ module powerbi.visuals.samples {
         }
 
         // TODO: Remove onDataChanged & onResizing once all visuals have implemented update.
+        /*
         public onDataChanged(options: VisualDataChangedOptions): void {
             this.update({
                 dataViews: options.dataViews,
@@ -1242,7 +1350,7 @@ module powerbi.visuals.samples {
                 viewport: viewport
             });
         }
-
+*/
         public enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions): VisualObjectInstanceEnumeration {
             var enumeration = new ObjectEnumerationBuilder();
             var layersLength = this.layers ? this.layers.length : 0;
@@ -1307,6 +1415,23 @@ module powerbi.visuals.samples {
             }
 
             return false;
+        }
+
+        public scrollTo(position: number): void {
+            debug.assert(this.isXScrollBarVisible || this.isYScrollBarVisible, 'scrolling is not available');
+            debug.assertValue(this.scrollScale, 'scrollScale');
+
+            var extent = this.brush.extent();
+            var extentLength = extent[1] - extent[0];
+            extent[0] = this.scrollScale(position);
+            extent[1] = extent[0] + extentLength;
+            this.brush.extent(extent);
+
+            var scrollSpaceLength = this.scrollScale.rangeExtent()[1];
+            this.setMinBrush(scrollSpaceLength, this.brushMinExtent);
+
+            var triggerBrush = this.brush.on('brush');
+            triggerBrush(null, 0);  // We don't use the data or index.
         }
 
         private getCategoryAxisValues(enumeration: ObjectEnumerationBuilder): void {
@@ -1711,7 +1836,6 @@ module powerbi.visuals.samples {
                 var maxMainYaxisSide = showY1OnRight ? tickLabelMargins.yRight : tickLabelMargins.yLeft,
                     maxSecondYaxisSide = showY1OnRight ? tickLabelMargins.yLeft : tickLabelMargins.yRight,
                     xMax = tickLabelMargins.xMax;
-                // TODO: there is a better way, the visual should communicate that it needs space below the x-axis through ICartesianVisual
 
                 maxMainYaxisSide += MekkoChart.LeftPadding;
                 if ((renderY2Axis && !showY1OnRight) || (showY1OnRight && renderY1Axis))
@@ -1756,7 +1880,21 @@ module powerbi.visuals.samples {
                     doneWithMargins = true;
             }
 
-            this.renderChart(mainAxisScale, axes, width, tickLabelMargins, chartHasAxisLabels, axisLabels, viewport, suppressAnimations);
+            if (this.isXScrollBarVisible) {
+                mainAxisScale = axes.x.scale;
+                var brushX = this.margin.left;
+                var brushY = viewport.height;
+                this.renderChartWithScrollBar(mainAxisScale, brushX, brushY, preferredViewport.width, viewport, axes, width, tickLabelMargins, chartHasAxisLabels, axisLabels, suppressAnimations);
+            }
+            else if (this.isYScrollBarVisible) {
+                mainAxisScale = axes.y1.scale;
+                var brushX = viewport.width;
+                var brushY = this.margin.top;
+                this.renderChartWithScrollBar(mainAxisScale, brushX, brushY, preferredViewport.height, viewport, axes, width, tickLabelMargins, chartHasAxisLabels, axisLabels, suppressAnimations);
+            }
+            else {
+                this.renderChart(mainAxisScale, axes, width, tickLabelMargins, chartHasAxisLabels, axisLabels, viewport, suppressAnimations);
+            }
         }
 
         private hideAxisLabels(legendMargins: IViewport): boolean {
@@ -1768,12 +1906,149 @@ module powerbi.visuals.samples {
             return false;
         }
 
+        private renderChartWithScrollBar(
+            inputMainAxisScale: D3.Scale.GenericScale<any>,
+            brushX: number,
+            brushY: number,
+            svgLength: number,
+            viewport: IViewport,
+            axes: CartesianAxisProperties,
+            width: number,
+            tickLabelMargins: any,
+            chartHasAxisLabels: boolean,
+            axisLabels: ChartAxesLabels,
+            suppressAnimations: boolean): void {
+
+            var mainAxisScale = <D3.Scale.OrdinalScale>inputMainAxisScale;
+            var scrollScale = this.scrollScale = <D3.Scale.OrdinalScale>mainAxisScale.copy();
+            var brush = this.brush;
+            var scrollSpaceLength;
+            var marginTop = this.margin.top;
+            var marginLeft = this.margin.left;
+            var marginRight = this.margin.right;
+            var marginBottom = this.margin.bottom;
+            var minExtent;
+
+            if (this.isXScrollBarVisible) {
+                scrollSpaceLength = viewport.width - (marginLeft + marginRight);
+                minExtent = this.getMinExtent(svgLength, scrollSpaceLength);
+                scrollScale.rangeBands([0, scrollSpaceLength]);
+                brush.x(scrollScale)
+                    .extent([0, minExtent]);
+            }
+            else {
+                scrollSpaceLength = viewport.height - (marginTop + marginBottom);
+                minExtent = this.getMinExtent(svgLength, scrollSpaceLength);
+                scrollScale.rangeBands([0, scrollSpaceLength]);
+                brush.y(scrollScale)
+                    .extent([0, minExtent]);
+            }
+
+            this.brushMinExtent = minExtent;
+
+            brush
+                .on("brush", () => window.requestAnimationFrame(() => this.onBrushed(scrollScale, mainAxisScale, axes, width, tickLabelMargins, chartHasAxisLabels, axisLabels, viewport, scrollSpaceLength)))
+                .on("brushend", () => this.onBrushEnd(minExtent));
+
+            var brushContext = this.brushContext = this.brushGraphicsContext
+                .attr({
+                    "transform": SVGUtil.translate(brushX, brushY),
+                    "drag-resize-disabled": "true" /*disables resizing of the visual when dragging the scrollbar in edit mode*/
+                })
+                .call(brush);  /*call the brush function, causing it to create the rectangles   */              
+              
+            /* Disabling the zooming feature */
+            brushContext.selectAll(".resize rect")
+                .remove();
+
+            brushContext.select(".background")
+                .style('cursor', 'default');
+
+            brushContext.selectAll(".extent")
+                .style({
+                    "fill-opacity": MekkoChart.fillOpacity,
+                    "cursor": "default",
+                });
+
+            if (this.isXScrollBarVisible)
+                brushContext.selectAll("rect").attr("height", MekkoChart.ScrollBarWidth);
+            else
+                brushContext.selectAll("rect").attr("width", MekkoChart.ScrollBarWidth);
+
+            if (mainAxisScale && scrollScale) {
+                mainAxisScale.rangeBands([0, scrollSpaceLength]);
+                this.renderChart(mainAxisScale, axes, width, tickLabelMargins, chartHasAxisLabels, axisLabels, viewport, suppressAnimations, scrollScale, brush.extent());
+            }
+        }
+
+        private getMinExtent(svgLength: number, scrollSpaceLength: number): number {
+            return scrollSpaceLength * scrollSpaceLength / (svgLength);
+        }
+
+        private onBrushEnd(minExtent: number): void {
+            var brushContext = this.brushContext;
+            if (this.isXScrollBarVisible) {
+                brushContext.select(".extent").attr("width", minExtent);
+            }
+            else
+                brushContext.select(".extent").attr("height", minExtent);
+        }
+
+        private onBrushed(scrollScale: any, mainAxisScale: any, axes: CartesianAxisProperties, width: number, tickLabelMargins: any, chartHasAxisLabels: boolean, axisLabels: ChartAxesLabels, viewport: IViewport, scrollSpaceLength: number): void {
+            var brush = this.brush;
+
+            if (mainAxisScale && scrollScale) {
+                MekkoChart.clampBrushExtent(this.brush, scrollSpaceLength, this.brushMinExtent);
+                var extent = brush.extent();
+                this.renderChart(mainAxisScale, axes, width, tickLabelMargins, chartHasAxisLabels, axisLabels, viewport, true /* suppressAnimations */, scrollScale, extent);
+            }
+        }
+        
+        /**
+         * To show brush every time when mouse is clicked on the empty background.
+         */
+        private setMinBrush(scrollSpaceLength: number, minExtent: number): void {
+            MekkoChart.clampBrushExtent(this.brush, scrollSpaceLength, minExtent);
+        }
+
         private static getUnitType(axis: CartesianAxisProperties, axisPropertiesLookup: (axis: CartesianAxisProperties) => IAxisProperties) {
             if (axisPropertiesLookup(axis).formatter &&
                 axisPropertiesLookup(axis).formatter.displayUnit &&
                 axisPropertiesLookup(axis).formatter.displayUnit.value > 1)
                 return axisPropertiesLookup(axis).formatter.displayUnit.title;
             return null;
+        }
+
+        private static clampBrushExtent(brush: D3.Svg.Brush, viewportWidth: number, minExtent: number): void {
+            var extent = brush.extent();
+            var width = extent[1] - extent[0];
+
+            if (width === minExtent && extent[1] <= viewportWidth && extent[0] >= 0)
+                return;
+
+            if (width > minExtent) {
+                var padding = (width - minExtent) / 2;
+                extent[0] += padding;
+                extent[1] -= padding;
+            }
+
+            else if (width < minExtent) {
+                var padding = (minExtent - width) / 2;
+                extent[0] -= padding;
+                extent[1] += padding;
+            }
+
+            if (extent[0] < 0) {
+                extent[0] = 0;
+                extent[1] = minExtent;
+            }
+
+            else if (extent[0] > viewportWidth - minExtent) {
+                extent[0] = viewportWidth - minExtent;
+                extent[1] = viewportWidth;
+            }
+
+            brush.extent(extent);
         }
 
         private getMaxMarginFactor(): number {
