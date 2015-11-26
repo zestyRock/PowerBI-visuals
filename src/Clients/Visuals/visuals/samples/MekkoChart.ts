@@ -3176,6 +3176,14 @@ module powerbi.visuals.samples {
 
                     var rawCategoryValue = categories[categoryIndex];
                     var color = MekkoColumnChart.getDataPointColor(legendItem, categoryIndex, dataPointObjects);
+                    
+                    var seriesData: TooltipSeriesDataItem[] = [
+                        {
+                            value: originalValue,
+                            metadata: dataViewCat.values[widthIndex]
+                        }];
+                        
+
                     var tooltipInfo: TooltipDataItem[] = TooltipBuilder.createTooltipInfo(formatStringProp, dataViewCat, rawCategoryValue, originalValue, null, null, seriesIndex, categoryIndex);
                     var series = columnSeries[seriesIndex];
                     var dataPointLabelSettings = (series.labelSettings) ? series.labelSettings : defaultLabelSettings;
