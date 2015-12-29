@@ -598,11 +598,7 @@ module powerbi.visuals.samples {
                 return Histogram.DefaultHistogramSettings.bins;
             }
 
-            if (binsNumber > this.MaxNumberOfBins) {
-                return this.MaxNumberOfBins;
-            }
-
-            return binsNumber;
+            return Math.min(binsNumber, this.MaxNumberOfBins);
         }
 
         private getFrequency(objects: DataViewObjects): boolean {
