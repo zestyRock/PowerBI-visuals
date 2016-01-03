@@ -79,6 +79,7 @@
 /// <reference path="capabilities/card.capabilities.ts"/>
 /// <reference path="capabilities/waterfallChart.capabilities.ts"/>
 /// <reference path="capabilities/sunburst.capabilities.ts"/>
+/// <reference path="capabilities/candleStickChart.capabilities.ts"/>
 /// <reference path="capabilities/kpiStatusWithHistory.capabilities.ts"/>
 /// <reference path="pluginsCapabilities.ts"/>
 
@@ -197,5 +198,6 @@
 /// <reference path="styles/visualStyles.ts"/>
 /// <reference path="visuals/donutChart.ts"/>
 /// <reference path="visuals/scriptVisual.ts"/>
+/// <reference path="visuals/candleStick.ts"/>
 
 /// <reference path="plugins.ts"/>

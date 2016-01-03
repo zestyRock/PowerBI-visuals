@@ -37,16 +37,14 @@ module powerbi.visuals {
 	};
 
 	export interface CandleStickDataPoint {
-		date: string;
+		date: Date;
 		open: number;
 		close: number;
 		maxValue: number;
 		minValue: number;
 	};
 
-    export class candleStick implements IVisual {
-		private max: number = -Infinity;
-        private min: number = Infinity;
+    export class CandleStick implements IVisual {
 		private static CandleStick: ClassAndSelector = createClassAndSelector('candlestick');
 		private static date: string = "date";
 		private static min: string = "min";
@@ -62,39 +60,34 @@ module powerbi.visuals {
             top: 20,
             right: 0,
             bottom: 20,
-            left: 60
+            left: 40
         };
+		private maxNumber: number = -Infinity;
+        private minNumber: number = Infinity;
 
-        public static capabilities: VisualCapabilities = {
-            dataRoles: [
-                {
-                    name: "Category",
-                    kind: VisualDataRoleKind.Grouping
-                },
-                {
-                    name: "Y",
-                    kind: VisualDataRoleKind.Measure
-                }
-            ],
-            dataViewMappings: [{
-                categorical: {
-                    categories: {
-                        for: { in: "Category" }
-                    }
-                }
-            }]
-        };
+   //     public static capabilities: VisualCapabilities = {
+			//dataRoles: [{
+			//	name: 'Values',
+			//	kind: VisualDataRoleKind.GroupingOrMeasure,
+			//}],
+			//dataViewMappings: [{
+			//	table: {
+			//		rows: {
+			//			for: { in: 'Values' },
+			//			dataReductionAlgorithm: { window: { count: 500 } }
+			//		},
+			//		rowCount: { preferred: { min: 1 } }
+			//	},
+			//}]
+   //     };
 
         
         private converter(dataView: DataView): CandleStickViewModel {
 			var parseDate = d3.time.format("%m/%d/%Y").parse; 
 			var points: CandleStickDataPoint[] = [];
 
-			if (!dataView.categorical ||
-                !dataView.categorical.categories ||
-                !dataView.categorical.categories[0] ||
-                !dataView.categorical.categories[0].values ||
-                !(dataView.categorical.categories[0].values.length > 0)) {
+			if (!dataView.table ||
+                !dataView.table.rows) {
                 return null;
             }
 
@@ -103,34 +96,42 @@ module powerbi.visuals {
 
 			dataView.metadata.columns.forEach(function (column) {
 				colNames.push(column.queryName.toLowerCase());
-			});
-
-			rawDataRows.forEach(function (item) {
-				var newPoint: CandleStickDataPoint;
-				newPoint.date = this.parseDate(item[colNames.indexOf(candleStick.date)]);
-				newPoint.close = item[colNames.indexOf(candleStick.close)];
-				newPoint.minValue = item[colNames.indexOf(candleStick.min)];
-				if (newPoint.minValue < this.min) {
-					this.min = newPoint.minValue;
-				}
-				newPoint.maxValue = item[colNames.indexOf(candleStick.max)];
-
-				if (newPoint.maxValue > this.max) {
-					this.max = newPoint.maxValue;
-				}
-				newPoint.open = item[colNames.indexOf(candleStick.open)];
-				points.push(newPoint);
-			});
+			});				  
 			
+			var minValueArray = []; var maxValueArray = [];
+		 
+			rawDataRows.forEach(function (item) {
+				var newPoint: CandleStickDataPoint = {
+					date: new Date(),
+					close: null,
+					open: null,
+					minValue: null,
+					maxValue: null
+				};
+
+				newPoint.date = parseDate(item[colNames.indexOf(CandleStick.date)]);
+				newPoint.close = item[colNames.indexOf(CandleStick.close)];
+				newPoint.minValue = item[colNames.indexOf(CandleStick.min)];
+				newPoint.maxValue = item[colNames.indexOf(CandleStick.max)];
+				newPoint.open = item[colNames.indexOf(CandleStick.open)];
+				points.push(newPoint);
+				minValueArray.push(newPoint.minValue);
+				maxValueArray.push(newPoint.maxValue);
+			});				   
+
+			this.minNumber = _.min(minValueArray);
+			this.maxNumber = _.max(maxValueArray);
+
             return {
 				dataPoints: points
 			};
         }
 
         public init(options: VisualInitOptions): void {
-			this.svg = d3.select(this.element.get(0)).append("svg").classed(candleStick.CandleStick.class, true);
-			
-        }
+			this.element = options.element;
+			this.svg = d3.select(this.element.get(0)).append("svg")
+				.classed(CandleStick.CandleStick.class, true);
+		}
 
         public update(options: VisualUpdateOptions) {
 			if (!options.dataViews || !options.dataViews[0]) return;
@@ -138,9 +139,8 @@ module powerbi.visuals {
             var w = options.viewport.width - this.margin.left - this.margin.right;
             var h = options.viewport.height - this.margin.top - this.margin.bottom;
 
-            if (this.svg.selectAll("g").length !== 0) {
-                this.svg.selectAll("g").remove();
-            }
+			this.svg.selectAll("g, rect, line").remove();
+
             var model: CandleStickViewModel = this.converter(options.dataViews[0]);
             if (!model) {
                 return;
@@ -151,18 +151,18 @@ module powerbi.visuals {
 
 		private draw(model: CandleStickViewModel, w: number, h: number): void {
 			this.svg.attr("width", w + this.margin.left + this.margin.right)
-                .attr("height", h + this.margin.top + this.margin.bottom)
-                .attr('transform', SVGUtil.translate(this.margin.left, this.margin.top));
+                .attr("height", h + this.margin.top + this.margin.bottom);
+                //.attr('transform', SVGUtil.translate(this.margin.left, this.margin.top));
 
 			var dataPoints = model.dataPoints;
 
 			var xScale = d3.time.scale()
-				.range([0, w])
+				.range([this.margin.left, w])
 				.domain(d3.extent(dataPoints, function (point) { return point.date; }));
 
 			var yScale = d3.scale.linear()
-				.range([h, 0])
-				.domain([this.min, this.max]);
+				.range([h, this.margin.bottom])
+				.domain([this.minNumber, this.maxNumber]);
 
 			var xAxis = d3.svg.axis()
 				.scale(xScale)
@@ -176,12 +176,13 @@ module powerbi.visuals {
 
 			this.svg.append("g")
 				.attr("class", "x axis")
-				.attr("transform", "translate(0," + h + ")")
+				//.attr("transform", "translate(0," + h + ")")
+				.attr('transform', SVGUtil.translate(0, this.margin.top + h))
 				.call(xAxis);
-
 
             this.svg.append("g")
 				.attr("class", "y axis")
+				.attr('transform', SVGUtil.translate(this.margin.left, this.margin.top))
 				.call(yAxis);
 
 			this.svg.selectAll("line.ext")
@@ -189,34 +190,36 @@ module powerbi.visuals {
 				.enter()
 				.append("svg:line")
 				.attr("class", "ext")
+				//.attr('transform', SVGUtil.translate(this.margin.left, 0))
 				.attr("x1", function (d) { return xScale(d.date) })
 				.attr("x2", function (d) { return xScale(d.date) })
-				.attr("y1", function (d) { return yScale(d.min); })
-				.attr("y2", function (d) { return yScale(d.max); });
+				.attr("y1", function (d) { return yScale(d.minValue); })
+				.attr("y2", function (d) { return yScale(d.maxValue); });
 
 			this.svg.selectAll("line.ext1")
                 .data(dataPoints)
                 .enter().append("svg:line")
                 .attr("class", "ext")
+				//.attr('transform', SVGUtil.translate(this.margin.left, 0))
                 .attr("x1", function (d) { return xScale(d.date) + 3 })
                 .attr("x2", function (d) { return xScale(d.date) - 3 })
-                .attr("y1", function (d) { return yScale(d.min); })
-                .attr("y2", function (d) { return yScale(d.min); });
-
+                .attr("y1", function (d) { return yScale(d.minValue); })
+                .attr("y2", function (d) { return yScale(d.minValue); });		 
 
             this.svg.selectAll("line.ext2")
                 .data(dataPoints)
                 .enter().append("svg:line")
+				//.attr('transform', SVGUtil.translate(this.margin.left, 0))
                 .attr("class", "ext")
                 .attr("x1", function (d) { return xScale(d.date) + 3 })
                 .attr("x2", function (d) { return xScale(d.date) - 3 })
-                .attr("y1", function (d) { return yScale(d.max); })
-                .attr("y2", function (d) { return yScale(d.max); });
-
+                .attr("y1", function (d) { return yScale(d.maxValue); })
+                .attr("y2", function (d) { return yScale(d.maxValue); });	
 
             this.svg.selectAll("rect")
                 .data(dataPoints)
                 .enter().append("svg:rect")
+				//.attr('transform', SVGUtil.translate(this.margin.left, 0))
                 .attr("x", function (d) { return xScale(d.date) - 3; })
                 .attr("y", function (d) { return yScale(Math.max(d.open, d.close)); })
                 .attr("height", function (d) {

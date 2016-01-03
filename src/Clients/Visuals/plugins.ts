@@ -72,6 +72,13 @@ module powerbi.visuals.plugins {
         capabilities: capabilities.multiRowCard,
         create: () => new MultiRowCard()
     };
+	
+    export var candleStick: IVisualPlugin = {
+        name: 'candleStick',
+		watermarkKey: 'candleStick',
+        capabilities: capabilities.candleStick,
+        create: () => new CandleStick()
+    };
 
     export let clusteredBarChart: IVisualPlugin = {
         name: 'clusteredBarChart',
