@@ -30,6 +30,7 @@
 module powerbi.visuals {
 	import ClassAndSelector = jsCommon.CssConstants.ClassAndSelector;
 	import createClassAndSelector = jsCommon.CssConstants.createClassAndSelector;
+	import SelectionManager = utility.SelectionManager;
 
     export interface CandleStickViewModel {
 		dataPoints: CandleStickDataPoint[];
@@ -52,10 +53,10 @@ module powerbi.visuals {
 		private static close: string = "close";
 		private static max: string = "max";
 		
+		private selectionManager: SelectionManager;
 		private element: JQuery;
 		private svg: D3.Selection;
-        private width: number;
-        private height: number;
+
         private margin: IMargin = {
             top: 20,
             right: 0,
@@ -64,27 +65,12 @@ module powerbi.visuals {
         };
 		private maxNumber: number = -Infinity;
         private minNumber: number = Infinity;
-
-   //     public static capabilities: VisualCapabilities = {
-			//dataRoles: [{
-			//	name: 'Values',
-			//	kind: VisualDataRoleKind.GroupingOrMeasure,
-			//}],
-			//dataViewMappings: [{
-			//	table: {
-			//		rows: {
-			//			for: { in: 'Values' },
-			//			dataReductionAlgorithm: { window: { count: 500 } }
-			//		},
-			//		rowCount: { preferred: { min: 1 } }
-			//	},
-			//}]
-   //     };
-
-        
+														   
         private converter(dataView: DataView): CandleStickViewModel {
+	
 			var parseDate = d3.time.format("%m/%d/%Y").parse; 
 			var points: CandleStickDataPoint[] = [];
+			var toolTip: TooltipDataItem[] = [];
 
 			if (!dataView.table ||
                 !dataView.table.rows) {
@@ -99,8 +85,8 @@ module powerbi.visuals {
 			});				  
 			
 			var minValueArray = []; var maxValueArray = [];
-		 
-			rawDataRows.forEach(function (item) {
+
+			for (var i = 0; i < rawDataRows.length; i++) {
 				var newPoint: CandleStickDataPoint = {
 					date: new Date(),
 					close: null,
@@ -108,19 +94,21 @@ module powerbi.visuals {
 					minValue: null,
 					maxValue: null
 				};
+				var item = rawDataRows[i];
 
 				newPoint.date = parseDate(item[colNames.indexOf(CandleStick.date)]);
 				newPoint.close = item[colNames.indexOf(CandleStick.close)];
 				newPoint.minValue = item[colNames.indexOf(CandleStick.min)];
 				newPoint.maxValue = item[colNames.indexOf(CandleStick.max)];
 				newPoint.open = item[colNames.indexOf(CandleStick.open)];
+
 				points.push(newPoint);
 				minValueArray.push(newPoint.minValue);
 				maxValueArray.push(newPoint.maxValue);
-			});				   
-
+			}
+				  
 			this.minNumber = _.min(minValueArray);
-			this.maxNumber = _.max(maxValueArray);
+			this.maxNumber = _.max(maxValueArray);	  
 
             return {
 				dataPoints: points
@@ -129,6 +117,7 @@ module powerbi.visuals {
 
         public init(options: VisualInitOptions): void {
 			this.element = options.element;
+			this.selectionManager = new SelectionManager({ hostServices: options.host });
 			this.svg = d3.select(this.element.get(0)).append("svg")
 				.classed(CandleStick.CandleStick.class, true);
 		}
@@ -152,9 +141,9 @@ module powerbi.visuals {
 		private draw(model: CandleStickViewModel, w: number, h: number): void {
 			this.svg.attr("width", w + this.margin.left + this.margin.right)
                 .attr("height", h + this.margin.top + this.margin.bottom);
-                //.attr('transform', SVGUtil.translate(this.margin.left, this.margin.top));
-
+              
 			var dataPoints = model.dataPoints;
+			var valueFormat = "0";
 
 			var xScale = d3.time.scale()
 				.range([this.margin.left, w])
@@ -176,7 +165,6 @@ module powerbi.visuals {
 
 			this.svg.append("g")
 				.attr("class", "x axis")
-				//.attr("transform", "translate(0," + h + ")")
 				.attr('transform', SVGUtil.translate(0, this.margin.top + h))
 				.call(xAxis);
 
@@ -190,7 +178,6 @@ module powerbi.visuals {
 				.enter()
 				.append("svg:line")
 				.attr("class", "ext")
-				//.attr('transform', SVGUtil.translate(this.margin.left, 0))
 				.attr("x1", function (d) { return xScale(d.date) })
 				.attr("x2", function (d) { return xScale(d.date) })
 				.attr("y1", function (d) { return yScale(d.minValue); })
@@ -198,9 +185,9 @@ module powerbi.visuals {
 
 			this.svg.selectAll("line.ext1")
                 .data(dataPoints)
-                .enter().append("svg:line")
+                .enter()
+				.append("svg:line")
                 .attr("class", "ext")
-				//.attr('transform', SVGUtil.translate(this.margin.left, 0))
                 .attr("x1", function (d) { return xScale(d.date) + 3 })
                 .attr("x2", function (d) { return xScale(d.date) - 3 })
                 .attr("y1", function (d) { return yScale(d.minValue); })
@@ -208,18 +195,18 @@ module powerbi.visuals {
 
             this.svg.selectAll("line.ext2")
                 .data(dataPoints)
-                .enter().append("svg:line")
-				//.attr('transform', SVGUtil.translate(this.margin.left, 0))
+                .enter()
+				.append("svg:line")
                 .attr("class", "ext")
                 .attr("x1", function (d) { return xScale(d.date) + 3 })
                 .attr("x2", function (d) { return xScale(d.date) - 3 })
                 .attr("y1", function (d) { return yScale(d.maxValue); })
                 .attr("y2", function (d) { return yScale(d.maxValue); });	
 
-            this.svg.selectAll("rect")
-                .data(dataPoints)
-                .enter().append("svg:rect")
-				//.attr('transform', SVGUtil.translate(this.margin.left, 0))
+            this.svg.selectAll("rect")    
+				.data(dataPoints)
+                .enter()
+				.append("svg:rect")
                 .attr("x", function (d) { return xScale(d.date) - 3; })
                 .attr("y", function (d) { return yScale(Math.max(d.open, d.close)); })
                 .attr("height", function (d) {
@@ -228,10 +215,38 @@ module powerbi.visuals {
                 .attr("width", 6)
                 .attr("fill", function (d) {
 					return d.open > d.close ? "red" : "green";
-				});
+				});							 
+
+			TooltipManager.addTooltip(this.svg.selectAll("rect"), (tooltipEvent: TooltipEvent) => {	
+				return [
+					{
+                        displayName: "open",
+                        value: tooltipEvent.data.open
+                    },
+                    {
+                        displayName: "close",
+                        value: tooltipEvent.data.close
+                    },
+                    {
+						displayName: "date",
+                        value: tooltipEvent.data.date
+                    },
+                    {
+                        displayName: "max of the day",
+                        value: tooltipEvent.data.maxValue
+                    },
+					{
+                        displayName: "min of the day",
+                        value: tooltipEvent.data.minValue
+                    }
+                ];
+            }, true);
+
 		}
 
-        public destroy() {}
+        public destroy() {
+			this.svg = null;
+		}
     }
 }
 
