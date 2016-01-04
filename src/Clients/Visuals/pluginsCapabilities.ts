@@ -100,5 +100,5 @@ module powerbi.visuals.capabilities {
     
     export let kpi = powerbi.visuals.KPIStatusWithHistoryCapabilities;
 
-	export let candleStick = powerbi.visuals.candleStickCapabilities;
+    export let candleStick = powerbi.visuals.candleStickCapabilities;
 }

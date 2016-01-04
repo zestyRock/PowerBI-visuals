@@ -630,7 +630,7 @@ module powerbi.visuals {
                     powerbi.visuals.plugins.card,
                     powerbi.visuals.plugins.slicer,
                     powerbi.visuals.plugins.donutChart,
-					powerbi.visuals.plugins.candleStick                  
+                    powerbi.visuals.plugins.candleStick                  
                 ];
 
                 if (this.featureSwitches.scriptVisualEnabled) {
@@ -864,7 +864,7 @@ module powerbi.visuals {
                 }), undefined);
 
 				//Candlestick Chart
-				createPlugin(this.visualPlugins, powerbi.visuals.plugins.candleStick, () => new CandleStick());
+                createPlugin(this.visualPlugins, powerbi.visuals.plugins.candleStick, () => new CandleStick());
             }
 
             public getPlugin(type: string): IVisualPlugin {

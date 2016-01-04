@@ -29,20 +29,29 @@
 
 module powerbi.visuals {
 
-	export const candleStickCapabilities: VisualCapabilities = {
-		dataRoles: [{
-			name: 'Values',
-			kind: VisualDataRoleKind.GroupingOrMeasure,
-		}],
-		dataViewMappings: [{
-			table: {
-				rows: {
-					for: { in: 'Values' },
-					dataReductionAlgorithm: { window: { count: 500 } }
-				},
-				rowCount: { preferred: { min: 1 } }
-			},
-		}]
+    export const candleStickCapabilities: VisualCapabilities = {
+        dataRoles: [{
+            name: 'Values',
+            kind: VisualDataRoleKind.GroupingOrMeasure,
+        }],
+        dataViewMappings: [{
+            table: {
+                rows: {
+                    for: {
+						in: 'Values'
+                    },
+                    dataReductionAlgorithm: {
+                        window: {
+                            count: 500
+                        }
+                    }
+                },
+                rowCount: {
+                    preferred: {
+                        min: 1
+                    }
+                }
+            },
+        }]
     };
-
 }

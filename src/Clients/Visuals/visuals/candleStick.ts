@@ -44,11 +44,11 @@ module powerbi.visuals {
 
     export class CandleStick implements IVisual {
         private static CandleStick: ClassAndSelector = createClassAndSelector('candlestick');
-        private static date: string = "date";
-        private static min: string = "min";
-        private static open: string = "open";
-        private static close: string = "close";
-        private static max: string = "max";
+        private static Date: string = "date";
+        private static Min: string = "min";
+        private static Open: string = "open";
+        private static Close: string = "close";
+        private static Max: string = "max";
 
         private selectionManager: SelectionManager;
         private element: JQuery;
@@ -67,7 +67,6 @@ module powerbi.visuals {
 
             var parseDate = d3.time.format("%m/%d/%Y").parse;
             var points: CandleStickDataPoint[] = [];
-            var toolTip: TooltipDataItem[] = [];
 
             if (!dataView.table ||
                 !dataView.table.rows) {
@@ -94,11 +93,11 @@ module powerbi.visuals {
                 };
                 var item = rawDataRows[i];
 
-                newPoint.date = parseDate(item[colNames.indexOf(CandleStick.date)]);
-                newPoint.close = item[colNames.indexOf(CandleStick.close)];
-                newPoint.minValue = item[colNames.indexOf(CandleStick.min)];
-                newPoint.maxValue = item[colNames.indexOf(CandleStick.max)];
-                newPoint.open = item[colNames.indexOf(CandleStick.open)];
+                newPoint.date = parseDate(item[colNames.indexOf(CandleStick.Date)]);
+                newPoint.close = item[colNames.indexOf(CandleStick.Close)];
+                newPoint.minValue = item[colNames.indexOf(CandleStick.Min)];
+                newPoint.maxValue = item[colNames.indexOf(CandleStick.Max)];
+                newPoint.open = item[colNames.indexOf(CandleStick.Open)];
 
                 points.push(newPoint);
                 minValueArray.push(newPoint.minValue);
@@ -174,11 +173,11 @@ module powerbi.visuals {
                 .attr('transform', SVGUtil.translate(this.margin.left, this.margin.top))
                 .call(yAxis);
 
-            this.svg.selectAll("line.ext")
+            this.svg.selectAll("line.minMaxLine")
                 .data(dataPoints)
                 .enter()
                 .append("svg:line")
-                .attr("class", "ext")
+                .attr("class", "minMaxLine")
                 .attr("x1", function (d) {
                     return xScale(d.date)
                 })
@@ -196,7 +195,7 @@ module powerbi.visuals {
                 .data(dataPoints)
                 .enter()
                 .append("svg:line")
-                .attr("class", "ext")
+                .attr("class", "minLine")
                 .attr("x1", function (d) {
                     return xScale(d.date) + 3
                 })
@@ -214,7 +213,7 @@ module powerbi.visuals {
                 .data(dataPoints)
                 .enter()
                 .append("svg:line")
-                .attr("class", "ext")
+                .attr("class", "maxLine")
                 .attr("x1", function (d) {
                     return xScale(d.date) + 3
                 })
