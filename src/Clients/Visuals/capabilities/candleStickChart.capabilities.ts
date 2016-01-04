@@ -38,7 +38,7 @@ module powerbi.visuals {
             table: {
                 rows: {
                     for: {
-						in: 'Values'
+                        in: 'Values'
                     },
                     dataReductionAlgorithm: {
                         window: {
