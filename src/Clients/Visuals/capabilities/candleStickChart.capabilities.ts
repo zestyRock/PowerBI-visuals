@@ -37,9 +37,7 @@ module powerbi.visuals {
         dataViewMappings: [{
             table: {
                 rows: {
-                    for: {
-                        in: 'Values'
-                    },
+                    for: { in: 'Values' },
                     dataReductionAlgorithm: {
                         window: {
                             count: 500
