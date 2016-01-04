@@ -51,18 +51,17 @@ module powerbi.visuals {
 
         private element: JQuery;
         private svg: D3.Selection;
-
         private margin: IMargin = {
             top: 20,
             right: 0,
             bottom: 20,
             left: 40
         };
+
         private maxNumber: number = -Infinity;
         private minNumber: number = Infinity;
 
         private converter(dataView: DataView): CandleStickViewModel {
-
             var parseDate = d3.time.format("%m/%d/%Y").parse;
             var points: CandleStickDataPoint[] = [];
 

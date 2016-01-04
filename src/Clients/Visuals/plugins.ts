@@ -75,7 +75,7 @@ module powerbi.visuals.plugins {
 	
     export var candleStick: IVisualPlugin = {
         name: 'candleStick',
-		watermarkKey: 'candleStick',
+        watermarkKey: 'candleStick',
         capabilities: capabilities.candleStick,
         create: () => new CandleStick()
     };
