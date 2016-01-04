@@ -33,8 +33,8 @@ module powerbi.visuals.sampleDataViews {
     import DataViewTransform = powerbi.data.DataViewTransform;
 
     export class SimpleCandleStickData
-		extends SampleDataViews
-		implements ISampleDataViewsMethods {
+        extends SampleDataViews
+        implements ISampleDataViewsMethods {
 
         public name: string = "SimpleCandleStickData";
         public displayName: string = "Simple Candlestick Data";
