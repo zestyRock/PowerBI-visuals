@@ -28,7 +28,6 @@
 module powerbi.visuals {
     import ClassAndSelector = jsCommon.CssConstants.ClassAndSelector;
     import createClassAndSelector = jsCommon.CssConstants.createClassAndSelector;
-    import SelectionManager = utility.SelectionManager;
 
     export interface CandleStickViewModel {
         dataPoints: CandleStickDataPoint[];		
@@ -50,7 +49,6 @@ module powerbi.visuals {
         private static Close: string = "close";
         private static Max: string = "max";
 
-        private selectionManager: SelectionManager;
         private element: JQuery;
         private svg: D3.Selection;
 
@@ -114,9 +112,6 @@ module powerbi.visuals {
 
         public init(options: VisualInitOptions): void {
             this.element = options.element;
-            this.selectionManager = new SelectionManager({
-                hostServices: options.host
-            });
             this.svg = d3.select(this.element.get(0)).append("svg")
                 .classed(CandleStick.CandleStick.class, true);
         }
@@ -250,18 +245,18 @@ module powerbi.visuals {
                     displayName: "open",
                     value: tooltipEvent.data.open
                 }, {
-						displayName: "close",
-						value: tooltipEvent.data.close
-					}, {
-						displayName: "date",
-						value: tooltipEvent.data.date
-					}, {
-						displayName: "max of the day",
-						value: tooltipEvent.data.maxValue
-					}, {
-						displayName: "min of the day",
-						value: tooltipEvent.data.minValue
-					}];
+                        displayName: "close",
+                        value: tooltipEvent.data.close
+                    }, {
+                        displayName: "date",
+                        value: tooltipEvent.data.date
+                    }, {
+                        displayName: "max of the day",
+                        value: tooltipEvent.data.maxValue
+                    }, {
+                        displayName: "min of the day",
+                        value: tooltipEvent.data.minValue
+                    }];
             }, true);
 
         }
