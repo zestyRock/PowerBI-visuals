@@ -60,6 +60,7 @@ module powerbi.visuals {
 
         private maxNumber: number = -Infinity;
         private minNumber: number = Infinity;
+		private static DefaultBarVal: number = 4;
 
         private converter(dataView: DataView): CandleStickViewModel {
             var parseDate = d3.time.format("%m/%d/%Y").parse;
@@ -173,10 +174,10 @@ module powerbi.visuals {
                 .append("svg:line")
                 .attr("class", "minMaxLine")
                 .attr("x1", function (d) {
-                    return xScale(d.date)
+				    return xScale(d.date);
                 })
                 .attr("x2", function (d) {
-                    return xScale(d.date)
+				    return xScale(d.date);
                 })
                 .attr("y1", function (d) {
                     return yScale(d.minValue);
@@ -191,10 +192,10 @@ module powerbi.visuals {
                 .append("svg:line")
                 .attr("class", "minLine")
                 .attr("x1", function (d) {
-                    return xScale(d.date) + 3
+				    return xScale(d.date) + CandleStick.DefaultBarVal;
                 })
                 .attr("x2", function (d) {
-                    return xScale(d.date) - 3
+				    return xScale(d.date) - CandleStick.DefaultBarVal;
                 })
                 .attr("y1", function (d) {
                     return yScale(d.minValue);
@@ -209,10 +210,10 @@ module powerbi.visuals {
                 .append("svg:line")
                 .attr("class", "maxLine")
                 .attr("x1", function (d) {
-                    return xScale(d.date) + 3
+				    return xScale(d.date) + CandleStick.DefaultBarVal;
                 })
                 .attr("x2", function (d) {
-                    return xScale(d.date) - 3
+				    return xScale(d.date) - CandleStick.DefaultBarVal;
                 })
                 .attr("y1", function (d) {
                     return yScale(d.maxValue);
@@ -226,7 +227,7 @@ module powerbi.visuals {
                 .enter()
                 .append("svg:rect")
                 .attr("x", function (d) {
-                    return xScale(d.date) - 3;
+				    return xScale(d.date) - CandleStick.DefaultBarVal;
                 })
                 .attr("y", function (d) {
                     return yScale(Math.max(d.open, d.close));
@@ -234,7 +235,7 @@ module powerbi.visuals {
                 .attr("height", function (d) {
                     return yScale(Math.min(d.open, d.close)) - yScale(Math.max(d.open, d.close));
                 })
-                .attr("width", 6)
+                .attr("width", 8)
                 .attr("fill", function (d) {
                     return d.open > d.close ? "red" : "green";
                 });
@@ -243,7 +244,7 @@ module powerbi.visuals {
                 return [{
                     displayName: "open",
                     value: tooltipEvent.data.open
-                }, {
+                    }, {
                         displayName: "close",
                         value: tooltipEvent.data.close
                     }, {
